@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: puckzone-auth-db
+    environment:
+      POSTGRES_DB: puckzone_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - puckzone_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d puckzone_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  puckzone_auth_data:
