@@ -26,6 +26,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Actuator: health checks (/actuator/health) para los probes de Azure Container Apps -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Persistencia JPA / Hibernate -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

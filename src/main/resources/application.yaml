@@ -17,6 +17,19 @@ spring:
       hibernate:
         format_sql: true
 
+# Actuator: expone solo /actuator/health y habilita los grupos liveness/readiness
+# que Azure Container Apps usa como health probes.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
 puckzone:
   jwt:
     # En produccion (Azure) sobreescribir con la variable de entorno PUCKZONE_JWT_SECRET.
