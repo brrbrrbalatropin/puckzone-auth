@@ -21,7 +21,7 @@ WORKDIR /app
 # Copia el jar generado en la etapa de build.
 COPY --from=build /app/target/*.jar app.jar
 
-# Puerto de la app (coincide con el server.port por defecto de Spring Boot).
-EXPOSE 8080
+# Puerto de la app (coincide con el server.port de application.yaml).
+EXPOSE 8081
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

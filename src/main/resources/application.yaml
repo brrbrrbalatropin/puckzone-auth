@@ -1,3 +1,8 @@
+# Convencion de puertos PuckZone: gateway 8080, auth 8081, matchmaking 8082,
+# game 8083, ranking 8084.
+server:
+  port: 8081
+
 spring:
   application:
     name: puckzone-auth
