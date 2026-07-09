@@ -44,13 +44,6 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- Swagger / OpenAPI UI: interfaz web para probar los endpoints en /swagger-ui.html -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.6.0</version>
-        </dependency>
-
         <!-- Solo BCrypt para hashear contrasenas, sin todo Spring Security -->
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -81,6 +74,17 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- Documentacion OpenAPI/Swagger (UI central en el gateway, /docs/auth).
+             OJO: auth sigue en Boot 3.3.5 (nunca se migro a Boot 4 como los
+             demas servicios) -> springdoc 2.6.0, NO 2.8.x (esa necesita
+             Framework 6.2+ y revienta aqui con NoClassDefFoundError
+             LiteWebJarsResourceResolver). -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.6.0</version>
         </dependency>
 
         <!-- Lombok -->
