@@ -16,6 +16,9 @@ public class JwtProperties {
     /** Clave secreta para firmar los tokens (HS256, minimo 32 bytes). */
     private String secret;
 
-    /** Tiempo de vida del token en milisegundos. */
-    private long expirationMs;
+    /** Vida del access token en milisegundos (corto: viaja en cada request). */
+    private long accessExpirationMs;
+
+    /** Vida del refresh token en milisegundos (largo: solo se usa en /refresh). */
+    private long refreshExpirationMs;
 }

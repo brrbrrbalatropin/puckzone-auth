@@ -40,5 +40,7 @@ puckzone:
     # En produccion (Azure) sobreescribir con la variable de entorno PUCKZONE_JWT_SECRET.
     # El valor por defecto es SOLO para desarrollo local (HS256 requiere >= 32 bytes).
     secret: ${PUCKZONE_JWT_SECRET:puckzone-dev-secret-change-me-please-32bytes-min!!}
-    # 24 horas en milisegundos.
-    expiration-ms: 86400000
+    # Access corto (1 hora): limita la ventana si un token se filtra.
+    access-expiration-ms: 3600000
+    # Refresh largo (7 dias): solo sirve en POST /api/auth/refresh.
+    refresh-expiration-ms: 604800000

@@ -2,10 +2,12 @@ package com.puckzone.auth.auth;
 
 import com.puckzone.auth.auth.dto.AuthResponse;
 import com.puckzone.auth.auth.dto.LoginRequest;
+import com.puckzone.auth.auth.dto.RefreshRequest;
 import com.puckzone.auth.auth.dto.RegisterRequest;
 import com.puckzone.auth.auth.exception.EmailAlreadyUsedException;
 import com.puckzone.auth.auth.exception.InvalidCredentialsException;
 import com.puckzone.auth.auth.exception.InvalidEmailDomainException;
+import com.puckzone.auth.auth.exception.InvalidRefreshTokenException;
 import com.puckzone.auth.auth.exception.UsernameAlreadyUsedException;
 import com.puckzone.auth.user.User;
 import com.puckzone.auth.user.UserService;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,8 +61,7 @@ public class AuthService {
         user.setUniversity(university);
 
         User saved = userService.save(user);
-        String token = jwtService.generateToken(saved);
-        return new AuthResponse(token, saved.getUsername(), saved.getUniversity());
+        return issueTokens(saved);
     }
 
     @Transactional(readOnly = true)
@@ -73,8 +75,35 @@ public class AuthService {
             throw new InvalidCredentialsException();
         }
 
-        String token = jwtService.generateToken(user);
-        return new AuthResponse(token, user.getUsername(), user.getUniversity());
+        return issueTokens(user);
+    }
+
+    /**
+     * Cambia un refresh token vigente por un par nuevo de tokens. El usuario
+     * se recarga de la BD: si fue borrado el refresh deja de servir, y los
+     * claims del access salen frescos (no arrastran datos viejos del token).
+     */
+    @Transactional(readOnly = true)
+    public AuthResponse refresh(RefreshRequest request) {
+        String subject = jwtService.parseRefreshTokenSubject(request.refreshToken());
+        UUID userId;
+        try {
+            userId = UUID.fromString(subject);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRefreshTokenException();
+        }
+        User user = userService.findById(userId)
+                .orElseThrow(InvalidRefreshTokenException::new);
+        return issueTokens(user);
+    }
+
+    /** Par access (1h) + refresh (7d) para register, login y refresh. */
+    private AuthResponse issueTokens(User user) {
+        return new AuthResponse(
+                jwtService.generateAccessToken(user),
+                jwtService.generateRefreshToken(user),
+                user.getUsername(),
+                user.getUniversity());
     }
 
     private String normalizeEmail(String email) {

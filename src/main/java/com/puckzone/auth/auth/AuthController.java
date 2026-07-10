@@ -2,6 +2,7 @@ package com.puckzone.auth.auth;
 
 import com.puckzone.auth.auth.dto.AuthResponse;
 import com.puckzone.auth.auth.dto.LoginRequest;
+import com.puckzone.auth.auth.dto.RefreshRequest;
 import com.puckzone.auth.auth.dto.RegisterRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        return ResponseEntity.ok(authService.refresh(request));
     }
 }

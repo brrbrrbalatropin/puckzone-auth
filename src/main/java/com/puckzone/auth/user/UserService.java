@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Operaciones de persistencia centradas en el usuario.
@@ -27,6 +28,10 @@ public class UserService {
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    public Optional<User> findById(UUID id) {
+        return userRepository.findById(id);
     }
 
     public User save(User user) {

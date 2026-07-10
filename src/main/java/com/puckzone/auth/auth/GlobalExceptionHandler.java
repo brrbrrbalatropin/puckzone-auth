@@ -4,6 +4,7 @@ import com.puckzone.auth.auth.dto.ErrorResponse;
 import com.puckzone.auth.auth.exception.EmailAlreadyUsedException;
 import com.puckzone.auth.auth.exception.InvalidCredentialsException;
 import com.puckzone.auth.auth.exception.InvalidEmailDomainException;
+import com.puckzone.auth.auth.exception.InvalidRefreshTokenException;
 import com.puckzone.auth.auth.exception.UsernameAlreadyUsedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +32,8 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage());
     }
 
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex) {
+    @ExceptionHandler({InvalidCredentialsException.class, InvalidRefreshTokenException.class})
+    public ResponseEntity<ErrorResponse> handleUnauthorized(RuntimeException ex) {
         return build(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
