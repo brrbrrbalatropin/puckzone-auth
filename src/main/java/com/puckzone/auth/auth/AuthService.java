@@ -4,6 +4,7 @@ import com.puckzone.auth.auth.dto.AuthResponse;
 import com.puckzone.auth.auth.dto.LoginRequest;
 import com.puckzone.auth.auth.dto.RefreshRequest;
 import com.puckzone.auth.auth.dto.RegisterRequest;
+import com.puckzone.auth.auth.exception.AccountLockedException;
 import com.puckzone.auth.auth.exception.EmailAlreadyUsedException;
 import com.puckzone.auth.auth.exception.InvalidCredentialsException;
 import com.puckzone.auth.auth.exception.InvalidEmailDomainException;
@@ -16,6 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -37,6 +40,14 @@ public class AuthService {
      */
     private static final Pattern INSTITUTIONAL_EMAIL =
             Pattern.compile("^[^@\\s]+@([^@\\s]+)\\.edu\\.co$", Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Anti fuerza bruta por cuenta (complementa el rate limit por IP del
+     * gateway): al fallo numero MAX la cuenta queda bloqueada LOCK_DURATION,
+     * y mientras tanto se rechaza incluso la contrasena correcta.
+     */
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+    private static final Duration LOCK_DURATION = Duration.ofMinutes(15);
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
@@ -64,18 +75,58 @@ public class AuthService {
         return issueTokens(saved);
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * SIN @Transactional a proposito: el contador de fallos debe quedar
+     * persistido AUNQUE el login termine en excepcion (una transaccion
+     * alrededor de todo el metodo haria rollback del incremento). Cada
+     * save() de UserService es su propia transaccion.
+     */
     public AuthResponse login(LoginRequest request) {
         String email = normalizeEmail(request.email());
 
         User user = userService.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new InvalidCredentialsException();
+        Instant now = Instant.now();
+        if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(now)) {
+            throw new AccountLockedException(minutesLeft(user.getLockedUntil(), now));
         }
 
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            registerFailedAttempt(user, now); // guarda el fallo y lanza
+        }
+
+        if (user.getFailedLoginAttempts() > 0 || user.getLockedUntil() != null) {
+            user.setFailedLoginAttempts(0);
+            user.setLockedUntil(null);
+            userService.save(user);
+        }
         return issueTokens(user);
+    }
+
+    /**
+     * Cuenta el fallo de contrasena y decide: al llegar al limite bloquea
+     * la cuenta (y responde ya como bloqueada, para que el usuario sepa
+     * que reintentar no sirve); antes del limite, el 401 generico de
+     * siempre. El contador se resetea al bloquear: cuando el candado
+     * expire, el usuario arranca con sus intentos completos.
+     */
+    private void registerFailedAttempt(User user, Instant now) {
+        int attempts = user.getFailedLoginAttempts() + 1;
+        if (attempts >= MAX_FAILED_ATTEMPTS) {
+            user.setFailedLoginAttempts(0);
+            user.setLockedUntil(now.plus(LOCK_DURATION));
+            userService.save(user);
+            throw new AccountLockedException(LOCK_DURATION.toMinutes());
+        }
+        user.setFailedLoginAttempts(attempts);
+        userService.save(user);
+        throw new InvalidCredentialsException();
+    }
+
+    /** Minutos restantes de bloqueo, redondeando hacia arriba (minimo 1). */
+    private long minutesLeft(Instant lockedUntil, Instant now) {
+        return Math.max(1, (Duration.between(now, lockedUntil).toSeconds() + 59) / 60);
     }
 
     /**

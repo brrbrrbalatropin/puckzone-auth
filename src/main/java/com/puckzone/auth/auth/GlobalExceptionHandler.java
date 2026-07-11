@@ -1,6 +1,7 @@
 package com.puckzone.auth.auth;
 
 import com.puckzone.auth.auth.dto.ErrorResponse;
+import com.puckzone.auth.auth.exception.AccountLockedException;
 import com.puckzone.auth.auth.exception.EmailAlreadyUsedException;
 import com.puckzone.auth.auth.exception.InvalidCredentialsException;
 import com.puckzone.auth.auth.exception.InvalidEmailDomainException;
@@ -35,6 +36,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({InvalidCredentialsException.class, InvalidRefreshTokenException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorized(RuntimeException ex) {
         return build(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    /**
+     * 423 Locked y no 401: la cuenta esta bloqueada temporalmente por
+     * fuerza bruta; decir "credenciales invalidas" seria mentira (tambien
+     * se rechaza la contrasena correcta) y confundiria al dueno legitimo.
+     */
+    @ExceptionHandler(AccountLockedException.class)
+    public ResponseEntity<ErrorResponse> handleLocked(AccountLockedException ex) {
+        return build(HttpStatus.LOCKED, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

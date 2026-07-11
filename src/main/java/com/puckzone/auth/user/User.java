@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -37,6 +38,24 @@ public class User {
 
     @Column(nullable = false)
     private int losses;
+
+    /**
+     * Fallos de contraseña consecutivos; se resetea al entrar o al bloquear.
+     * El DEFAULT es imprescindible: sin él, el ALTER de ddl-auto update
+     * falla en la tabla ya poblada de producción (NOT NULL sin relleno)
+     * y la columna nunca se crearía.
+     */
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    private int failedLoginAttempts;
+
+    /**
+     * Hasta cuándo está bloqueado el login por intentos fallidos (null =
+     * sin bloqueo). En BD y no en memoria: el candado sobrevive reinicios
+     * y aplica igual si auth corre con varias réplicas.
+     */
+    @Column
+    private Instant lockedUntil;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
