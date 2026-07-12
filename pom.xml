@@ -100,6 +100,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- H2 emula Postgres en los tests: corren sin BD viva, igual que
+             en ranking y game (el Postgres local tiene otra password y el
+             de Docker suele estar apagado) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
