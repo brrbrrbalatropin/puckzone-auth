@@ -16,10 +16,16 @@ resource "azurerm_container_app" "auth" {
   }
 
   template {
-    # Auth es stateless (todo vive en Postgres): podria escalar sin problema,
-    # pero con 1 replica alcanza para la carga del proyecto.
-    min_replicas = 1
-    max_replicas = 1
+    # Auth es stateless (todo vive en Postgres): min 2 replicas para alta
+    # disponibilidad (una caida no tumba el login) y autoscaling HTTP hasta
+    # 3 si el trafico concurrente lo pide (bcrypt es costoso en CPU).
+    min_replicas = 2
+    max_replicas = 3
+
+    http_scale_rule {
+      name                = "http-concurrency"
+      concurrent_requests = "50"
+    }
 
     container {
       # 0.5/1Gi como game: con 0.25 vCPU el arranque de Spring supera los ~30s
