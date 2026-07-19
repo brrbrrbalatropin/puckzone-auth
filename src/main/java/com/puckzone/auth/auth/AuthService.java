@@ -35,7 +35,7 @@ public class AuthService {
 
     /**
      * Correo institucional colombiano: algo@<dominio>.edu.co
-     * El grupo 1 captura todo el dominio antes de ".edu.co"
+     * El grupo 1 captura el dominio completo antes de ".edu.co"
      * (p.ej. "eci" o "correo.unal").
      */
     private static final Pattern INSTITUTIONAL_EMAIL =
@@ -78,7 +78,7 @@ public class AuthService {
     /**
      * SIN @Transactional a proposito: el contador de fallos debe quedar
      * persistido AUNQUE el login termine en excepcion (una transaccion
-     * alrededor de todo el metodo haria rollback del incremento). Cada
+     * alrededor del metodo completo haria rollback del incremento). Cada
      * save() de UserService es su propia transaccion.
      */
     public AuthResponse login(LoginRequest request) {

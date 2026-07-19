@@ -100,26 +100,27 @@ class AuthRegistrationAndRefreshTest {
 
     @Test
     void losCorreosNoInstitucionalesSeRechazan() {
-        assertThrows(InvalidEmailDomainException.class,
-                () -> authService.register(register("daniel@gmail.com")));
-        assertThrows(InvalidEmailDomainException.class,
-                () -> authService.register(register("daniel@mit.edu")));
+        RegisterRequest gmail = register("daniel@gmail.com");
+        RegisterRequest eduExtranjero = register("daniel@mit.edu");
         // "edu.co" pegado sin ser el sufijo institucional real
-        assertThrows(InvalidEmailDomainException.class,
-                () -> authService.register(register("daniel@fakeedu.co")));
+        RegisterRequest pegado = register("daniel@fakeedu.co");
+
+        assertThrows(InvalidEmailDomainException.class, () -> authService.register(gmail));
+        assertThrows(InvalidEmailDomainException.class, () -> authService.register(eduExtranjero));
+        assertThrows(InvalidEmailDomainException.class, () -> authService.register(pegado));
         verify(userService, never()).save(any());
     }
 
     @Test
     void elEmailYElUsernameDuplicadosSeRechazan() {
         when(userService.emailExists("repetido@eci.edu.co")).thenReturn(true);
-        assertThrows(EmailAlreadyUsedException.class,
-                () -> authService.register(register("repetido@eci.edu.co")));
+        RegisterRequest emailRepetido = register("repetido@eci.edu.co");
+        assertThrows(EmailAlreadyUsedException.class, () -> authService.register(emailRepetido));
 
         when(userService.emailExists("daniel@eci.edu.co")).thenReturn(false);
         when(userService.usernameExists("daniel")).thenReturn(true);
-        assertThrows(UsernameAlreadyUsedException.class,
-                () -> authService.register(register("daniel@eci.edu.co")));
+        RegisterRequest usernameRepetido = register("daniel@eci.edu.co");
+        assertThrows(UsernameAlreadyUsedException.class, () -> authService.register(usernameRepetido));
         verify(userService, never()).save(any());
     }
 
@@ -146,20 +147,20 @@ class AuthRegistrationAndRefreshTest {
         // El token no es un refresh válido (firma mala, vencido o type!=refresh).
         when(jwtService.parseRefreshTokenSubject("chatarra"))
                 .thenThrow(new InvalidRefreshTokenException());
-        assertThrows(InvalidRefreshTokenException.class,
-                () -> authService.refresh(new RefreshRequest("chatarra")));
+        RefreshRequest chatarra = new RefreshRequest("chatarra");
+        assertThrows(InvalidRefreshTokenException.class, () -> authService.refresh(chatarra));
 
         // El subject no es un UUID.
         when(jwtService.parseRefreshTokenSubject("sub-raro")).thenReturn("no-soy-uuid");
-        assertThrows(InvalidRefreshTokenException.class,
-                () -> authService.refresh(new RefreshRequest("sub-raro")));
+        RefreshRequest subRaro = new RefreshRequest("sub-raro");
+        assertThrows(InvalidRefreshTokenException.class, () -> authService.refresh(subRaro));
 
         // El usuario del token ya no existe en la BD.
         UUID ghost = UUID.randomUUID();
         when(jwtService.parseRefreshTokenSubject("de-fantasma")).thenReturn(ghost.toString());
         when(userService.findById(ghost)).thenReturn(Optional.empty());
-        assertThrows(InvalidRefreshTokenException.class,
-                () -> authService.refresh(new RefreshRequest("de-fantasma")));
+        RefreshRequest deFantasma = new RefreshRequest("de-fantasma");
+        assertThrows(InvalidRefreshTokenException.class, () -> authService.refresh(deFantasma));
 
         verify(jwtService, never()).generateAccessToken(any());
     }

@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.5</version>
+        <version>4.1.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.puckzone</groupId>
@@ -23,7 +23,7 @@
         <!-- Web / REST -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
         <!-- Actuator: health checks (/actuator/health) para los probes de Azure Container Apps -->
@@ -52,7 +52,7 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- Solo BCrypt para hashear contrasenas, sin todo Spring Security -->
+        <!-- Solo BCrypt para hashear contrasenas, sin el stack completo de Spring Security -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
@@ -85,14 +85,12 @@
         </dependency>
 
         <!-- Documentacion OpenAPI/Swagger (UI central en el gateway, /docs/auth).
-             OJO: auth sigue en Boot 3.3.5 (nunca se migro a Boot 4 como los
-             demas servicios) -> springdoc 2.6.0, NO 2.8.x (esa necesita
-             Framework 6.2+ y revienta aqui con NoClassDefFoundError
-             LiteWebJarsResourceResolver). -->
+             2.8.6 es la version que funciona en Boot 4 WebMVC (no hay springdoc
+             nativo de Boot 4 aun; misma version que game/matchmaking/ranking). -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.6.0</version>
+            <version>2.8.6</version>
         </dependency>
 
         <!-- Lombok -->

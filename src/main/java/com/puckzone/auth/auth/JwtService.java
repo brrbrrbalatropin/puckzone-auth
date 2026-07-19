@@ -26,6 +26,10 @@ import java.util.Date;
  * gateway, unicamente sirve para pedir un access nuevo en /refresh. El
  * gateway rechaza cualquier token con type=refresh fuera de ese endpoint.
  */
+// Sonar java:S2143 pide java.time, pero el builder de jjwt 0.12 solo acepta
+// java.util.Date en issuedAt/expiration; las fechas se calculan con Instant y
+// se convierten justo en el borde (Date.from).
+@SuppressWarnings("java:S2143")
 @Service
 public class JwtService {
 
