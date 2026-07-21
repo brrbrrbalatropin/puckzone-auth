@@ -11,6 +11,13 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/puckzone_auth}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
+    # Ver la nota extensa en puckzone-ranking: el Postgres compartido es B1ms
+    # (max_connections = 50, no ampliable) y el default de Hikari (10 por
+    # replica, incluso ociosa) agotaba el servidor entre los tres servicios
+    # con JPA. Sin este techo, un deploy no puede levantar la revision nueva.
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:5}
+      minimum-idle: ${DB_POOL_IDLE:2}
 
   jpa:
     hibernate:
